@@ -14,8 +14,6 @@ annotation class StateMachineDsl
 @StateMachineDsl
 class Machine<S, E : Event, C> {
   var id: String = TODO()
-  var initial: S = TODO()
-  var final: S = TODO()
   var context: C = TODO()
 
   fun states(init: States<S, E, C>.() -> Unit): States<S, E, C> = TODO()
@@ -23,14 +21,26 @@ class Machine<S, E : Event, C> {
 
 @StateMachineDsl
 class States<S, E : Event, C> {
+  var initial: S = TODO()
+  var final: Set<S> = TODO()
+
   fun state(state: S, init: State<S, E, C>.() -> Unit): State<S, E, C> = TODO()
-  fun finalState(state: S): Unit = TODO()
+  fun <SS, CC> machine(state: S, init: SubMachineState<S, C, SS, E, CC>.() -> Unit): SubMachineState<S, C, SS, E, CC> = TODO()
 }
 
 @StateMachineDsl
 class State<S, E : Event, C> {
   fun on(event: E, init: Transition<S, E, C>.() -> Unit): State<S, E, C> = TODO()
-  fun <SS, CC> states(init: States<SS, E, CC>.() -> Unit): States<SS, E, CC> = TODO()
+}
+
+@StateMachineDsl
+class SubMachineState<S, C, SS, E : Event, CC> {
+  fun on(event: E, init: Transition<S, E, C>.() -> Unit): State<S, E, C> = TODO()
+
+  var id: String = TODO()
+  var context: CC = TODO()
+
+  fun states(init: States<SS, E, CC>.() -> Unit): States<SS, E, CC> = TODO()
 }
 
 @StateMachineDsl

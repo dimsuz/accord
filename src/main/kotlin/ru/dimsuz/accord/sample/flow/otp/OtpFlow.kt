@@ -19,13 +19,16 @@ sealed class OtpEvent : Event() {
 }
 
 fun States<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
-  state(MyAppFlow.FlowOtp) {
+  machine<OtpFlowState, Unit>(MyAppFlow.FlowOtp) {
     on(MyAppEvent.Done) {
       // TODO check if success or no
       transitionTo(MyAppFlow.FlowPinCreate)
     }
 
-    states<OtpFlowState, Unit> {
+    states {
+      initial = OtpFlowState.ScreenOtpIntro
+      final = setOf(OtpFlowState.Dismissed, OtpFlowState.FinishedSuccessfully)
+
       state(OtpFlowState.ScreenOtpIntro) {
         on(MyAppEvent.Back) { transitionTo(OtpFlowState.Dismissed) }
         on(OtpEvent.OtpIntroContinue) { transitionTo(OtpFlowState.ScreenOtpInput) }
@@ -34,8 +37,6 @@ fun States<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
         on(MyAppEvent.Back) { transitionTo(OtpFlowState.ScreenOtpIntro) }
         on(OtpEvent.OtpInputSuccess) { transitionTo(OtpFlowState.FinishedSuccessfully) }
       }
-      finalState(OtpFlowState.Dismissed)
-      finalState(OtpFlowState.FinishedSuccessfully)
     }
   }
 }

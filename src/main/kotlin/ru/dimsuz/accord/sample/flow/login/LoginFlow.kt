@@ -21,7 +21,7 @@ sealed class LoginEvent : Event() {
 }
 
 fun States<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
-  state(MyAppFlow.FlowLogin) {
+  machine<LoginFlowState, Boolean>(MyAppFlow.FlowLogin) {
     on(LoginEvent.LoginSuccessOtpRequired) { transitionTo(MyAppFlow.FlowOtp) }
     on(LoginEvent.LoginSuccessOtpNotRequired) {
       transitionTo(MyAppFlow.FlowPinCreate)
@@ -31,7 +31,10 @@ fun States<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
       // TODO check if otp required or not
       transitionTo(MyAppFlow.FlowPinCreate)
     }
-    states<LoginFlowState, Boolean> {
+    states {
+      initial = LoginFlowState.ScreenOnboarding
+      final = setOf(LoginFlowState.FinishedOtpRequired, LoginFlowState.FinishedOtpNotRequired)
+
       state(LoginFlowState.ScreenOnboarding) {
         on(LoginEvent.OnboardingFinished) { transitionTo(LoginFlowState.ScreenLogin) }
         on(MyAppEvent.Back) { transitionTo(LoginFlowState.Dismissed) }
@@ -40,8 +43,6 @@ fun States<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
         on(MyAppEvent.Back) { transitionTo(LoginFlowState.ScreenOnboarding) }
         on(LoginEvent.LoginSuccessOtpRequired) { transitionTo(LoginFlowState.FinishedOtpRequired) }
       }
-      finalState(LoginFlowState.FinishedOtpRequired)
-      finalState(LoginFlowState.FinishedOtpNotRequired)
     }
   }
 }

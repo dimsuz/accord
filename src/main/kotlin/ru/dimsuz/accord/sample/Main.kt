@@ -9,6 +9,7 @@ import ru.dimsuz.accord.sample.flow.otp.otpFlowState
 fun main() {
   machine<MyAppFlow, Event, Map<String, Int>> {
     states {
+      initial = MyAppFlow.FlowLogin
       loginFlowState()
       otpFlowState()
     }
