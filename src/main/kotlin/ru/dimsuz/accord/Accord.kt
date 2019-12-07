@@ -29,13 +29,18 @@ class States<S, E : Event, C> {
 }
 
 @StateMachineDsl
-class State<S, E : Event, C> {
+class Transitions<S, E: Event, C> {
   fun on(event: E, init: Transition<S, E, C>.() -> Unit): State<S, E, C> = TODO()
 }
 
 @StateMachineDsl
+class State<S, E : Event, C> {
+  fun transitions(init: Transitions<S, E, C>.() -> Unit): Unit = TODO()
+}
+
+@StateMachineDsl
 class SubMachineState<S, C, SS, E : Event, CC> {
-  fun on(event: E, init: Transition<S, E, C>.() -> Unit): State<S, E, C> = TODO()
+  fun transitions(init: Transitions<S, E, C>.() -> Unit): Unit = TODO()
 
   var id: String = TODO()
   var context: CC = TODO()

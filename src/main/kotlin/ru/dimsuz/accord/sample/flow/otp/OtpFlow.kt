@@ -20,9 +20,11 @@ sealed class OtpEvent : Event() {
 
 fun States<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
   machine<OtpFlowState, Unit>(MyAppFlow.FlowOtp) {
-    on(MyAppEvent.Done) {
-      // TODO check if success or no
-      transitionTo(MyAppFlow.FlowPinCreate)
+    transitions {
+      on(MyAppEvent.Done) {
+        // TODO check if success or no
+        transitionTo(MyAppFlow.FlowPinCreate)
+      }
     }
 
     states {
@@ -30,12 +32,16 @@ fun States<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
       final = setOf(OtpFlowState.Dismissed, OtpFlowState.FinishedSuccessfully)
 
       state(OtpFlowState.ScreenOtpIntro) {
-        on(MyAppEvent.Back) { transitionTo(OtpFlowState.Dismissed) }
-        on(OtpEvent.OtpIntroContinue) { transitionTo(OtpFlowState.ScreenOtpInput) }
+        transitions {
+          on(MyAppEvent.Back) { transitionTo(OtpFlowState.Dismissed) }
+          on(OtpEvent.OtpIntroContinue) { transitionTo(OtpFlowState.ScreenOtpInput) }
+        }
       }
       state(OtpFlowState.ScreenOtpInput) {
-        on(MyAppEvent.Back) { transitionTo(OtpFlowState.ScreenOtpIntro) }
-        on(OtpEvent.OtpInputSuccess) { transitionTo(OtpFlowState.FinishedSuccessfully) }
+        transitions {
+          on(MyAppEvent.Back) { transitionTo(OtpFlowState.ScreenOtpIntro) }
+          on(OtpEvent.OtpInputSuccess) { transitionTo(OtpFlowState.FinishedSuccessfully) }
+        }
       }
     }
   }
