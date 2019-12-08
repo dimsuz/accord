@@ -7,6 +7,7 @@ import java.util.*
 // - test not all states described (have state() block)
 // - cond
 // - read xstate manual on context (action order etc)
+// - support for send,raise etc actions?
 
 @DslMarker
 annotation class StateMachineDsl
@@ -29,13 +30,14 @@ class States<S, E : Event, C> {
 }
 
 @StateMachineDsl
-class Transitions<S, E: Event, C> {
+class Transitions<S, E : Event, C> {
   fun on(event: E, init: Transition<S, E, C>.() -> Unit): State<S, E, C> = TODO()
 }
 
 @StateMachineDsl
 class State<S, E : Event, C> {
   fun transitions(init: Transitions<S, E, C>.() -> Unit): Unit = TODO()
+  fun actions(init: StateActions<C, E, S>.() -> Unit): Unit = TODO()
 }
 
 @StateMachineDsl
@@ -52,7 +54,16 @@ class SubMachineState<S, C, SS, E : Event, CC> {
 class Transition<S, E : Event, C> {
   fun transitionTo(state: S): Unit = TODO()
   fun guard(predicate: (context: C) -> Boolean): Unit = TODO()
+  fun action(action: MachineAction<C, E, S>): Unit = TODO()
 }
+
+@StateMachineDsl
+class StateActions<S, E : Event, C> {
+  fun onEntry(action: MachineAction<C, E, S>): Unit = TODO()
+  fun onExit(action: MachineAction<C, E, S>): Unit = TODO()
+}
+
+typealias MachineAction<C, E, S> = (C, E, S) -> Unit
 
 fun <S, E : Event, C> machine(init: Machine<S, E, C>.() -> Unit): Machine<S, E, C> = TODO()
 

@@ -32,8 +32,15 @@ fun States<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
       final = setOf(OtpFlowState.Dismissed, OtpFlowState.FinishedSuccessfully)
 
       state(OtpFlowState.ScreenOtpIntro) {
+        actions {
+          onEntry { _, e, _ -> println("entered $e")}
+          onExit { _, e, _ -> println("exited $e")}
+        }
         transitions {
-          on(MyAppEvent.Back) { transitionTo(OtpFlowState.Dismissed) }
+          on(MyAppEvent.Back) {
+            transitionTo(OtpFlowState.Dismissed)
+            action { _, e, _ -> println("transitioning to $e") }
+          }
           on(OtpEvent.OtpIntroContinue) { transitionTo(OtpFlowState.ScreenOtpInput) }
         }
       }
