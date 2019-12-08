@@ -3,7 +3,6 @@ package ru.dimsuz.accord
 import java.util.*
 
 // TODO
-// - move functions out of dsl classes to extension functions
 // - test not all states described (have state() block)
 // - cond
 // - read xstate manual on context (action order etc)
@@ -14,8 +13,8 @@ annotation class StateMachineDsl
 
 @StateMachineDsl
 class Machine<S, E : Event, C> {
-  var id: String = TODO()
-  var context: C = TODO()
+  var id: String? = null
+  var context: C? = null
 
   fun states(init: States<S, E, C>.() -> Unit): States<S, E, C> = TODO()
 }
@@ -64,8 +63,6 @@ class StateActions<S, E : Event, C> {
 }
 
 typealias MachineAction<C, E, S> = (C, E, S) -> Unit
-
-fun <S, E : Event, C> machine(init: Machine<S, E, C>.() -> Unit): Machine<S, E, C> = TODO()
 
 abstract class Event {
   open val id: String = UUID.randomUUID().toString()
