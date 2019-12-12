@@ -7,7 +7,7 @@ fun <S, E : Event, C> machine(init: Machine<S, E, C>.() -> Unit): MachineConfig<
   machine.init()
   return MachineConfig(
     id = getOrCreateId(machine),
-    context = Unit as C
+    context = machine.context
   )
 }
 

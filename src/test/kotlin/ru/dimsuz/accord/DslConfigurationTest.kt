@@ -5,9 +5,12 @@ import org.junit.Test
 import java.lang.IllegalStateException
 
 class DslConfigurationTest {
+
+  // region BasicConfig
+
   @Test
   fun `given missing machine id should generate a default one`() {
-    val config = machine<TestStates, Event, Unit> {  }
+    val config = machine<TestStates, Event, Unit> { }
     assertThat(config.id)
       .isNotEmpty()
   }
@@ -48,6 +51,22 @@ class DslConfigurationTest {
         .containsMatch("id.*blank")
     }
   }
+
+  @Test
+  fun `given a context uses it in config`() {
+    val config = machine<TestStates, Event, List<Int>> {
+      context = arrayListOf(1, 3, 3)
+    }
+
+    assertThat(config.context)
+      .isEqualTo(arrayListOf(1, 3, 3))
+  }
+
+  // endregion
+
+  // region States
+
+  // endregion
 }
 
 private enum class TestStates {
