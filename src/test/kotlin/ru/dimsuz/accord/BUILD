@@ -2,7 +2,7 @@ load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kt_jvm_test")
 
 kt_jvm_test(
     name = "accord_test",
-    srcs = glob(["*.kt"]),
+    srcs = ["DslConfigurationTest.kt"],
     test_class = "ru.dimsuz.accord.DslConfigurationTest",
     visibility = ["//visibility:public"],
     deps = [
