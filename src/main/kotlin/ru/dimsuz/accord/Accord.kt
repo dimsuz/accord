@@ -16,16 +16,28 @@ class Machine<S, E : Event, C> {
   var id: String? = null
   var context: C? = null
 
-  fun states(init: States<S, E, C>.() -> Unit): States<S, E, C> = TODO()
+  internal val states: States<S, E, C> = States()
+
+  fun states(init: States<S, E, C>.() -> Unit) = states.init()
 }
 
 @StateMachineDsl
 class States<S, E : Event, C> {
-  var initial: S = TODO()
-  var final: Set<S> = TODO()
+  var initial: S? = null
+  var final: Set<S> = emptySet()
 
-  fun state(state: S, init: State<S, E, C>.() -> Unit): State<S, E, C> = TODO()
-  fun <SS, CC> machine(state: S, init: SubMachineState<S, C, SS, E, CC>.() -> Unit): SubMachineState<S, C, SS, E, CC> = TODO()
+  internal val leafStates = mutableMapOf<S, State<S, E, C>>()
+  internal val subMachineStates = mutableMapOf<S, SubMachineState<S, C, *, E, *>>()
+
+  fun state(state: S, init: State<S, E, C>.() -> Unit) {
+    leafStates[state] = State()
+  }
+
+  // TODO call `submachine`? Otherwise it's easy to just call top-level `machine` from `states { }` block
+  //  and get confused
+  fun <SS, CC> machine(state: S, init: SubMachineState<S, C, SS, E, CC>.() -> Unit) {
+    subMachineStates[state] = SubMachineState<S, C, SS, E, CC>()
+  }
 }
 
 @StateMachineDsl
@@ -43,8 +55,8 @@ class State<S, E : Event, C> {
 class SubMachineState<S, C, SS, E : Event, CC> {
   fun transitions(init: Transitions<S, E, C>.() -> Unit): Unit = TODO()
 
-  var id: String = TODO()
-  var context: CC = TODO()
+  var id: String? = null
+  var context: CC? = null
 
   fun states(init: States<SS, E, CC>.() -> Unit): States<SS, E, CC> = TODO()
 }

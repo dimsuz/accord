@@ -10,15 +10,18 @@ class DslConfigurationTest {
 
   @Test
   fun `given missing machine id should generate a default one`() {
-    val config = machine<TestStates, Event, Unit> { }
+    val config = machine<Test1States, Event, Unit> {
+      addFakeStates()
+    }
     assertThat(config.id)
       .isNotEmpty()
   }
 
   @Test
   fun `given non-empty machine id should use it`() {
-    val config = machine<TestStates, Event, Unit> {
+    val config = machine<Test1States, Event, Unit> {
       id = "my-id"
+      addFakeStates()
     }
     assertThat(config.id)
       .isEqualTo("my-id")
@@ -27,8 +30,9 @@ class DslConfigurationTest {
   @Test
   fun `given empty machine id should throw config exception`() {
     try {
-      machine<TestStates, Event, Unit> {
+      machine<Test1States, Event, Unit> {
         id = ""
+        addFakeStates()
       }
       error("expected machine configuration to throw")
     } catch (e: IllegalStateException) {
@@ -41,8 +45,9 @@ class DslConfigurationTest {
   @Test
   fun `given blank machine id should throw config exception`() {
     try {
-      machine<TestStates, Event, Unit> {
+      machine<Test1States, Event, Unit> {
         id = "    "
+        addFakeStates()
       }
       error("expected machine configuration to throw")
     } catch (e: IllegalStateException) {
@@ -54,8 +59,9 @@ class DslConfigurationTest {
 
   @Test
   fun `given a context uses it in config`() {
-    val config = machine<TestStates, Event, List<Int>> {
+    val config = machine<Test1States, Event, List<Int>> {
       context = arrayListOf(1, 3, 3)
+      addFakeStates()
     }
 
     assertThat(config.context)
@@ -65,12 +71,126 @@ class DslConfigurationTest {
   // endregion
 
   // region States
+  @Test
+  fun `given a machine with no initial state should report an error`() {
+    try {
+      machine<Test3States, Event, Unit> {
+        states { }
+      }
+      error("expected machine configuration to throw")
+    } catch (e: IllegalStateException) {
+      assertThat(e)
+        .hasMessageThat()
+        .containsMatch("initial state")
+    }
+  }
+
+  @Test
+  fun `given a machine with leaf initial state should save it in config`() {
+    val config = machine<Test3States, Event, Unit> {
+      states {
+        initial = Test3States.S3
+        state(Test3States.S1) { }
+        state(Test3States.S2) { }
+        state(Test3States.S3) { }
+      }
+    }
+
+    assertThat(config.initialState)
+      .isInstanceOf(StateNode.Leaf::class.java)
+    assertThat(config.initialState.state)
+      .isEqualTo(Test3States.S3)
+  }
+
+  @Test
+  fun `given a machine with submachine initial state should save it in config`() {
+    val config = machine<Test3States, Event, Unit> {
+      states {
+        initial = Test3States.S2
+        machine<Test1States, Unit>(Test3States.S1) {
+          addFakeSubMachineStates()
+        }
+        machine<Test1States, Unit>(Test3States.S2) {
+          addFakeSubMachineStates()
+        }
+        machine<Test1States, Unit>(Test3States.S3) {
+          addFakeSubMachineStates()
+        }
+      }
+    }
+
+    assertThat(config.initialState)
+      .isInstanceOf(StateNode.SubMachine::class.java)
+    assertThat(config.initialState.state)
+      .isEqualTo(Test3States.S2)
+  }
+
+  @Test
+  fun `given a machine with missing leaf initial state should report an error`() {
+    try {
+      machine<Test3States, Event, Unit> {
+        states {
+          initial = Test3States.S1
+          state(Test3States.S2) {}
+          state(Test3States.S3) {}
+        }
+      }
+      error("expected machine configuration to throw")
+    } catch (e: IllegalStateException) {
+      assertThat(e)
+        .hasMessageThat()
+        .containsMatch("Initial state.* not found on.*")
+    }
+  }
+
+  @Test
+  fun `given a machine with missing submachine initial state should report an error`() {
+    try {
+      machine<Test3States, Event, Unit> {
+        states {
+          initial = Test3States.S1
+          machine<Test1States, Unit>(Test3States.S2) {
+            addFakeSubMachineStates()
+          }
+          machine<Test1States, Unit>(Test3States.S3) {
+            addFakeSubMachineStates()
+          }
+        }
+      }
+      error("expected machine configuration to throw")
+    } catch (e: IllegalStateException) {
+      assertThat(e)
+        .hasMessageThat()
+        .containsMatch("Initial state.* not found on.*")
+    }
+  }
+
+  // TODO test that submachine and leaf states cannot be mixed on one level
 
   // endregion
 }
 
-private enum class TestStates {
+
+private fun <E : Event, C> Machine<Test1States, E, C>.addFakeStates() {
+  states {
+    initial = Test1States.S1
+    state(Test1States.S1) {}
+  }
+}
+
+private fun <S, C, E : Event, CC> SubMachineState<S, C, Test1States, E, CC>.addFakeSubMachineStates() {
+  states {
+    initial = Test1States.S1
+    state(Test1States.S1) {}
+  }
+}
+
+private enum class Test3States {
   S1,
   S2,
   S3
+}
+
+private enum class Test1States {
+  S1
 }
