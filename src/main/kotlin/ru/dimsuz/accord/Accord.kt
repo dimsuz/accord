@@ -26,17 +26,17 @@ class States<S, E : Event, C> {
   var initial: S? = null
   var final: Set<S> = emptySet()
 
-  internal val leafStates = mutableMapOf<S, State<S, E, C>>()
-  internal val subMachineStates = mutableMapOf<S, SubMachineState<S, C, *, E, *>>()
+  internal val atomicStates = mutableMapOf<S, State<S, E, C>>()
+  internal val compoundStates = mutableMapOf<S, CompoundState<S, C, *, E, *>>()
 
   fun state(state: S, init: State<S, E, C>.() -> Unit) {
-    leafStates[state] = State()
+    atomicStates[state] = State()
   }
 
-  // TODO call `submachine`? Otherwise it's easy to just call top-level `machine` from `states { }` block
+  // TODO call `compoundState`? Otherwise it's easy to just call top-level `machine` from `states { }` block
   //  and get confused
-  fun <SS, CC> machine(state: S, init: SubMachineState<S, C, SS, E, CC>.() -> Unit) {
-    subMachineStates[state] = SubMachineState<S, C, SS, E, CC>()
+  fun <SS, CC> machine(state: S, init: CompoundState<S, C, SS, E, CC>.() -> Unit) {
+    compoundStates[state] = CompoundState<S, C, SS, E, CC>()
   }
 }
 
@@ -52,7 +52,7 @@ class State<S, E : Event, C> {
 }
 
 @StateMachineDsl
-class SubMachineState<S, C, SS, E : Event, CC> {
+class CompoundState<S, C, SS, E : Event, CC> {
   fun transitions(init: Transitions<S, E, C>.() -> Unit): Unit = TODO()
 
   var id: String? = null

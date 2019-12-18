@@ -15,14 +15,14 @@ fun <S, E : Event, C> machine(init: Machine<S, E, C>.() -> Unit): MachineConfig<
 
 private fun <C, E : Event, S> createInitialStateNode(machineId: String, machine: Machine<S, E, C>): StateNode<S> {
   val initial = machine.states.initial ?: error("initial state is missing for '$machineId'")
-  if ((machine.states.leafStates.isNotEmpty() && !machine.states.leafStates.containsKey(initial)) ||
-    (machine.states.subMachineStates.isNotEmpty() && !machine.states.subMachineStates.containsKey(initial))) {
+  if ((machine.states.atomicStates.isNotEmpty() && !machine.states.atomicStates.containsKey(initial)) ||
+    (machine.states.compoundStates.isNotEmpty() && !machine.states.compoundStates.containsKey(initial))) {
     error("Initial state $initial not found on '$machineId'")
   }
-  return if (machine.states.subMachineStates.isNotEmpty()) {
-    StateNode.SubMachine(initial)
+  return if (machine.states.compoundStates.isNotEmpty()) {
+    StateNode.Compound(initial)
   } else {
-    StateNode.Leaf(initial)
+    StateNode.Atomic(initial)
   }
 }
 

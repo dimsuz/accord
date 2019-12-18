@@ -86,7 +86,7 @@ class DslConfigurationTest {
   }
 
   @Test
-  fun `given a machine with leaf initial state should save it in config`() {
+  fun `given a machine with atomic initial state should save it in config`() {
     val config = machine<Test3States, Event, Unit> {
       states {
         initial = Test3States.S3
@@ -97,36 +97,36 @@ class DslConfigurationTest {
     }
 
     assertThat(config.initialState)
-      .isInstanceOf(StateNode.Leaf::class.java)
+      .isInstanceOf(StateNode.Atomic::class.java)
     assertThat(config.initialState.state)
       .isEqualTo(Test3States.S3)
   }
 
   @Test
-  fun `given a machine with submachine initial state should save it in config`() {
+  fun `given a machine with compound initial state should save it in config`() {
     val config = machine<Test3States, Event, Unit> {
       states {
         initial = Test3States.S2
         machine<Test1States, Unit>(Test3States.S1) {
-          addFakeSubMachineStates()
+          addFakeCompoundStates()
         }
         machine<Test1States, Unit>(Test3States.S2) {
-          addFakeSubMachineStates()
+          addFakeCompoundStates()
         }
         machine<Test1States, Unit>(Test3States.S3) {
-          addFakeSubMachineStates()
+          addFakeCompoundStates()
         }
       }
     }
 
     assertThat(config.initialState)
-      .isInstanceOf(StateNode.SubMachine::class.java)
+      .isInstanceOf(StateNode.Compound::class.java)
     assertThat(config.initialState.state)
       .isEqualTo(Test3States.S2)
   }
 
   @Test
-  fun `given a machine with missing leaf initial state should report an error`() {
+  fun `given a machine with missing atomic initial state should report an error`() {
     try {
       machine<Test3States, Event, Unit> {
         states {
@@ -144,16 +144,16 @@ class DslConfigurationTest {
   }
 
   @Test
-  fun `given a machine with missing submachine initial state should report an error`() {
+  fun `given a machine with missing compound initial state should report an error`() {
     try {
       machine<Test3States, Event, Unit> {
         states {
           initial = Test3States.S1
           machine<Test1States, Unit>(Test3States.S2) {
-            addFakeSubMachineStates()
+            addFakeCompoundStates()
           }
           machine<Test1States, Unit>(Test3States.S3) {
-            addFakeSubMachineStates()
+            addFakeCompoundStates()
           }
         }
       }
@@ -165,7 +165,7 @@ class DslConfigurationTest {
     }
   }
 
-  // TODO test that submachine and leaf states cannot be mixed on one level
+  // TODO test that compound and atomic states cannot be mixed on one level
 
   // endregion
 }
@@ -178,7 +178,7 @@ private fun <E : Event, C> Machine<Test1States, E, C>.addFakeStates() {
   }
 }
 
-private fun <S, C, E : Event, CC> SubMachineState<S, C, Test1States, E, CC>.addFakeSubMachineStates() {
+private fun <S, C, E : Event, CC> CompoundState<S, C, Test1States, E, CC>.addFakeCompoundStates() {
   states {
     initial = Test1States.S1
     state(Test1States.S1) {}

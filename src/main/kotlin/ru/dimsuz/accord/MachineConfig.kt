@@ -9,6 +9,6 @@ data class MachineConfig<S, E : Event, C>(
 sealed class StateNode<S> {
   abstract val state: S
 
-  data class Leaf<S>(override val state: S): StateNode<S>()
-  data class SubMachine<S>(override val state: S): StateNode<S>()
+  data class Atomic<S>(override val state: S): StateNode<S>()
+  data class Compound<S>(override val state: S): StateNode<S>()
 }
