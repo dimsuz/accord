@@ -1,7 +1,7 @@
 package ru.dimsuz.accord.sample.flow.login
 
 import ru.dimsuz.accord.Event
-import ru.dimsuz.accord.States
+import ru.dimsuz.accord.StatesDsl
 import ru.dimsuz.accord.sample.flow.core.MyAppEvent
 import ru.dimsuz.accord.sample.flow.core.MyAppFlow
 
@@ -20,7 +20,7 @@ sealed class LoginEvent : Event() {
   object LoginSuccessOtpNotRequired : LoginEvent()
 }
 
-fun States<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
+fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
   machine<LoginFlowState, Boolean>(MyAppFlow.FlowLogin) {
     transitions {
       on(LoginEvent.LoginSuccessOtpRequired) { transitionTo(MyAppFlow.FlowOtp) }

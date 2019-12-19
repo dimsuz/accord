@@ -1,7 +1,7 @@
 package ru.dimsuz.accord.sample.flow.otp
 
 import ru.dimsuz.accord.Event
-import ru.dimsuz.accord.States
+import ru.dimsuz.accord.StatesDsl
 import ru.dimsuz.accord.sample.flow.core.MyAppEvent
 import ru.dimsuz.accord.sample.flow.core.MyAppFlow
 
@@ -18,7 +18,7 @@ sealed class OtpEvent : Event() {
   object OtpInputSuccess : OtpEvent()
 }
 
-fun States<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
+fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
   machine<OtpFlowState, Unit>(MyAppFlow.FlowOtp) {
     transitions {
       on(MyAppEvent.Done) {

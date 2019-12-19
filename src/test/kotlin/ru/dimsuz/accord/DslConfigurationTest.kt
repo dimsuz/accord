@@ -97,7 +97,7 @@ class DslConfigurationTest {
     }
 
     assertThat(config.initialState)
-      .isInstanceOf(StateNode.Atomic::class.java)
+      .isInstanceOf(StateConfig.Atomic::class.java)
     assertThat(config.initialState.state)
       .isEqualTo(Test3States.S3)
   }
@@ -120,7 +120,7 @@ class DslConfigurationTest {
     }
 
     assertThat(config.initialState)
-      .isInstanceOf(StateNode.Compound::class.java)
+      .isInstanceOf(StateConfig.Compound::class.java)
     assertThat(config.initialState.state)
       .isEqualTo(Test3States.S2)
   }
@@ -171,14 +171,14 @@ class DslConfigurationTest {
 }
 
 
-private fun <E : Event, C> Machine<Test1States, E, C>.addFakeStates() {
+private fun <E : Event, C> MachineDsl<Test1States, E, C>.addFakeStates() {
   states {
     initial = Test1States.S1
     state(Test1States.S1) {}
   }
 }
 
-private fun <S, C, E : Event, CC> CompoundState<S, C, Test1States, E, CC>.addFakeCompoundStates() {
+private fun <S, C, E : Event, CC> CompoundStateDsl<S, C, Test1States, E, CC>.addFakeCompoundStates() {
   states {
     initial = Test1States.S1
     state(Test1States.S1) {}
