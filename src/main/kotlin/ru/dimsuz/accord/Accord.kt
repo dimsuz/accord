@@ -30,13 +30,18 @@ class StatesDsl<S, E : Event, C> {
   internal val compoundStates = mutableMapOf<S, CompoundStateDsl<S, C, *, E, *>>()
 
   fun state(state: S, init: StateDsl<S, E, C>.() -> Unit) {
-    atomicStates[state] = StateDsl()
+    atomicStates[state] = StateDsl<S, E, C>().apply { init() }
   }
 
   // TODO call `compoundState`? Otherwise it's easy to just call top-level `machine` from `states { }` block
   //  and get confused
-  fun <SS, CC> machine(state: S, init: CompoundStateDsl<S, C, SS, E, CC>.() -> Unit) {
-    compoundStates[state] = CompoundStateDsl<S, C, SS, E, CC>()
+  fun <SubState : Any, SubContext> machine(
+    state: S,
+    init: CompoundStateDsl<S, C, SubState, E, SubContext>.() -> Unit
+  ) {
+    compoundStates[state] = CompoundStateDsl<S, C, SubState, E, SubContext>().apply {
+      init()
+    }
   }
 }
 
@@ -52,13 +57,17 @@ class StateDsl<S, E : Event, C> {
 }
 
 @StateMachineDsl
-class CompoundStateDsl<S, C, SS, E : Event, CC> {
+class CompoundStateDsl<S, C, SubState, E : Event, SubContext>(
+  val states: StatesDsl<SubState, E, SubContext> = StatesDsl()
+) {
   fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit): Unit = TODO()
 
   var id: String? = null
-  var context: CC? = null
+  var context: SubContext? = null
 
-  fun states(init: StatesDsl<SS, E, CC>.() -> Unit): StatesDsl<SS, E, CC> = TODO()
+  fun states(init: StatesDsl<SubState, E, SubContext>.() -> Unit) {
+    states.init()
+  }
 }
 
 @StateMachineDsl

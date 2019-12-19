@@ -89,31 +89,31 @@ class DslConfigurationTest {
   fun `given a machine with atomic initial state should save it in config`() {
     val config = machine<Test3States, Event, Unit> {
       states {
-        initial = Test3States.S3
-        state(Test3States.S1) { }
-        state(Test3States.S2) { }
-        state(Test3States.S3) { }
+        initial = Test3States.S33
+        state(Test3States.S31) { }
+        state(Test3States.S32) { }
+        state(Test3States.S33) { }
       }
     }
 
     assertThat(config.initialState)
       .isInstanceOf(StateConfig.Atomic::class.java)
     assertThat(config.initialState.state)
-      .isEqualTo(Test3States.S3)
+      .isEqualTo(Test3States.S33)
   }
 
   @Test
   fun `given a machine with compound initial state should save it in config`() {
     val config = machine<Test3States, Event, Unit> {
       states {
-        initial = Test3States.S2
-        machine<Test1States, Unit>(Test3States.S1) {
+        initial = Test3States.S32
+        machine<Test1States, Unit>(Test3States.S31) {
           addFakeCompoundStates()
         }
-        machine<Test1States, Unit>(Test3States.S2) {
+        machine<Test1States, Unit>(Test3States.S32) {
           addFakeCompoundStates()
         }
-        machine<Test1States, Unit>(Test3States.S3) {
+        machine<Test1States, Unit>(Test3States.S33) {
           addFakeCompoundStates()
         }
       }
@@ -122,17 +122,18 @@ class DslConfigurationTest {
     assertThat(config.initialState)
       .isInstanceOf(StateConfig.Compound::class.java)
     assertThat(config.initialState.state)
-      .isEqualTo(Test3States.S2)
+      .isEqualTo(Test3States.S32)
   }
 
   @Test
   fun `given a machine with missing atomic initial state should report an error`() {
     try {
       machine<Test3States, Event, Unit> {
+        id = "test_3_states"
         states {
-          initial = Test3States.S1
-          state(Test3States.S2) {}
-          state(Test3States.S3) {}
+          initial = Test3States.S31
+          state(Test3States.S32) {}
+          state(Test3States.S33) {}
         }
       }
       error("expected machine configuration to throw")
@@ -147,12 +148,13 @@ class DslConfigurationTest {
   fun `given a machine with missing compound initial state should report an error`() {
     try {
       machine<Test3States, Event, Unit> {
+        id = "machine_3_state"
         states {
-          initial = Test3States.S1
-          machine<Test1States, Unit>(Test3States.S2) {
+          initial = Test3States.S31
+          machine<Test1States, Unit>(Test3States.S32) {
             addFakeCompoundStates()
           }
-          machine<Test1States, Unit>(Test3States.S3) {
+          machine<Test1States, Unit>(Test3States.S33) {
             addFakeCompoundStates()
           }
         }
@@ -165,6 +167,29 @@ class DslConfigurationTest {
     }
   }
 
+  @Test
+  fun `given a machine with mixed atomic and compound states should report an error`() {
+    try {
+      machine<Test3States, Event, Unit> {
+        states {
+          initial = Test3States.S31
+          state(Test3States.S31) { }
+          state(Test3States.S32) { }
+          machine<Test1States, Unit>(Test3States.S33) {
+            addFakeCompoundStates()
+          }
+        }
+      }
+      error("expected machine configuration to throw")
+    } catch (e: IllegalStateException) {
+      val atomicStateName = Test3States.S31.toString()
+      val compoundStateName = Test3States.S33.toString()
+      assertThat(e)
+        .hasMessageThat()
+        .containsMatch("mixing atomic ['$atomicStateName'] and  compound ['$compoundStateName'] states is not allowed")
+    }
+  }
+
   // TODO test that compound and atomic states cannot be mixed on one level
 
   // endregion
@@ -173,24 +198,24 @@ class DslConfigurationTest {
 
 private fun <E : Event, C> MachineDsl<Test1States, E, C>.addFakeStates() {
   states {
-    initial = Test1States.S1
-    state(Test1States.S1) {}
+    initial = Test1States.S11
+    state(Test1States.S11) {}
   }
 }
 
 private fun <S, C, E : Event, CC> CompoundStateDsl<S, C, Test1States, E, CC>.addFakeCompoundStates() {
   states {
-    initial = Test1States.S1
-    state(Test1States.S1) {}
+    initial = Test1States.S11
+    state(Test1States.S11) {}
   }
 }
 
 private enum class Test3States {
-  S1,
-  S2,
-  S3
+  S31,
+  S32,
+  S33
 }
 
 private enum class Test1States {
-  S1
+  S11
 }
