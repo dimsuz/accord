@@ -27,7 +27,7 @@ class StatesDsl<S, E : Event, C> {
   var final: Set<S> = emptySet()
 
   internal val atomicStates = mutableMapOf<S, StateDsl<S, E, C>>()
-  internal val compoundStates = mutableMapOf<S, CompoundStateDsl<S, C, *, E, *>>()
+  internal val compoundStates = mutableMapOf<S, CompoundStateDsl<S, E, C, *, *>>()
 
   fun state(state: S, init: StateDsl<S, E, C>.() -> Unit) {
     atomicStates[state] = StateDsl<S, E, C>().apply { init() }
@@ -37,9 +37,9 @@ class StatesDsl<S, E : Event, C> {
   //  and get confused
   fun <SubState : Any, SubContext> machine(
     state: S,
-    init: CompoundStateDsl<S, C, SubState, E, SubContext>.() -> Unit
+    init: CompoundStateDsl<S, E, C, SubState, SubContext>.() -> Unit
   ) {
-    compoundStates[state] = CompoundStateDsl<S, C, SubState, E, SubContext>().apply {
+    compoundStates[state] = CompoundStateDsl<S, E, C, SubState, SubContext>().apply {
       init()
     }
   }
@@ -57,15 +57,15 @@ class StateDsl<S, E : Event, C> {
 }
 
 @StateMachineDsl
-class CompoundStateDsl<S, C, SubState, E : Event, SubContext>(
-  val states: StatesDsl<SubState, E, SubContext> = StatesDsl()
+class CompoundStateDsl<S, E : Event, C, SS, CS>(
+  val states: StatesDsl<SS, E, CS> = StatesDsl()
 ) {
   fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit): Unit = TODO()
 
   var id: String? = null
-  var context: SubContext? = null
+  var context: CS? = null
 
-  fun states(init: StatesDsl<SubState, E, SubContext>.() -> Unit) {
+  fun states(init: StatesDsl<SS, E, CS>.() -> Unit) {
     states.init()
   }
 }
@@ -73,7 +73,7 @@ class CompoundStateDsl<S, C, SubState, E : Event, SubContext>(
 @StateMachineDsl
 class TransitionDsl<S, E : Event, C> {
   fun transitionTo(state: S): Unit = TODO()
-  fun guard(predicate: (context: C) -> Boolean): Unit = TODO()
+  fun cond(predicate: (context: C) -> Boolean): Unit = TODO()
   fun action(action: MachineAction<C, E, S>): Unit = TODO()
 }
 

@@ -7,13 +7,13 @@ fun <S, E : Event, C> machine(init: MachineDsl<S, E, C>.() -> Unit): MachineConf
   machine.init()
   val rootStateDsl = StatesDsl<Unit, E, Unit>().apply {
     initial = Unit
-    compoundStates[Unit] = CompoundStateDsl<Unit, Unit, S, E, C>(machine.states).apply {
+    compoundStates[Unit] = CompoundStateDsl<Unit, E, Unit, S, C>(machine.states).apply {
       this.id = machine.id
       this.context = machine.context
     }
   }
   return MachineConfig(
-    rootState = createSubStateConfigs("root-id", rootStateDsl).single() as StateConfig.Compound<Any, S, C>
+    rootState = createSubStateConfigs("root-id", rootStateDsl).single() as StateConfig.Compound<Any, E, C, S>
   )
 }
 
@@ -47,20 +47,20 @@ fun <S, E : Event, C> createSubStateConfigs(
 }
 
 fun <S, E : Event, C> createAtomicStateConfig(state: S, stateDsl: StateDsl<S, E, C>): StateConfig<S> {
-  return StateConfig.Atomic(state)
+  return StateConfig.Atomic(state, TransitionsConfig<S, E, C>(emptyMap()))
 }
 
-fun <S, C, E : Event> createCompoundStateConfig(state: S, stateDsl: CompoundStateDsl<S, C, *, E, *>): StateConfig<S> {
+fun <S, E : Event, C, SS, CS> createCompoundStateConfig(state: S, stateDsl: CompoundStateDsl<S, E, C, SS, CS>): StateConfig<S> {
   val id = getOrCreateId(stateDsl)
-  val subStates = createSubStateConfigs(id, stateDsl.states) as List<StateConfig<Any>>
+  val subStates = createSubStateConfigs(id, stateDsl.states)
   val initialState = stateDsl.states.initial ?: error("initial state is not specified for '$id'")
-  println("searching for ${stateDsl.states.initial} in ${subStates.map { it.state }}")
-  return StateConfig.Compound(
+  return StateConfig.Compound<S, E, CS, SS>(
     id = id,
     state = state,
     context = stateDsl.context,
     initialState = subStates.find { it.state == initialState } ?: error("Initial state $initialState not found on '$id'"),
-    states = subStates
+    states = subStates,
+    transitions = TransitionsConfig(emptyMap())
   )
 }
 

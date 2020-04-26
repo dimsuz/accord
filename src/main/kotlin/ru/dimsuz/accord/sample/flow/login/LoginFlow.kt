@@ -26,7 +26,7 @@ fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
       on(LoginEvent.LoginSuccessOtpRequired) { transitionTo(MyAppFlow.FlowOtp) }
       on(LoginEvent.LoginSuccessOtpNotRequired) {
         transitionTo(MyAppFlow.FlowPinCreate)
-        guard { context -> context.isEmpty() }
+        cond { context -> context.isEmpty() }
       }
       on(MyAppEvent.Done) {
         // TODO check if otp required or not

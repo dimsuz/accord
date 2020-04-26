@@ -167,55 +167,31 @@ class DslConfigurationTest {
     }
   }
 
-  @Test
-  fun `given a machine with mixed atomic and compound states should report an error`() {
-    try {
-      machine<Test3States, Event, Unit> {
-        states {
-          initial = Test3States.S31
-          state(Test3States.S31) { }
-          state(Test3States.S32) { }
-          machine<Test1States, Unit>(Test3States.S33) {
-            addFakeCompoundStates()
-          }
-        }
-      }
-      error("expected machine configuration to throw")
-    } catch (e: IllegalStateException) {
-      val atomicStateName = Test3States.S31.toString()
-      val compoundStateName = Test3States.S33.toString()
-      assertThat(e)
-        .hasMessageThat()
-        .containsMatch("mixing atomic ['$atomicStateName'] and  compound ['$compoundStateName'] states is not allowed")
+  // endregion
+
+  private fun <E : Event, C> MachineDsl<Test1States, E, C>.addFakeStates() {
+    states {
+      initial = Test1States.S11
+      state(Test1States.S11) {}
     }
   }
 
-  // TODO test that compound and atomic states cannot be mixed on one level
+  private fun <S, E : Event, C, CS> CompoundStateDsl<S, E, C, Test1States, CS>.addFakeCompoundStates() {
+    states {
+      initial = Test1States.S11
+      state(Test1States.S11) {}
+    }
+  }
 
-  // endregion
-}
+  private enum class Test3States {
+    S31,
+    S32,
+    S33
+  }
 
-
-private fun <E : Event, C> MachineDsl<Test1States, E, C>.addFakeStates() {
-  states {
-    initial = Test1States.S11
-    state(Test1States.S11) {}
+  private enum class Test1States {
+    S11
   }
 }
 
-private fun <S, C, E : Event, CC> CompoundStateDsl<S, C, Test1States, E, CC>.addFakeCompoundStates() {
-  states {
-    initial = Test1States.S11
-    state(Test1States.S11) {}
-  }
-}
 
-private enum class Test3States {
-  S31,
-  S32,
-  S33
-}
-
-private enum class Test1States {
-  S11
-}
