@@ -1,6 +1,6 @@
 package ru.dimsuz.accord
 
-import java.util.*
+import java.util.UUID
 
 // TODO
 // - test not all states described (have state() block)
