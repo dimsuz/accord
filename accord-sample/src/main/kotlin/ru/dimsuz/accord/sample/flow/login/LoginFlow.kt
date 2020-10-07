@@ -23,12 +23,12 @@ sealed class LoginEvent : Event() {
 fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
   machine<LoginFlowState, Boolean>(MyAppFlow.FlowLogin) {
     transitions {
-      on(LoginEvent.LoginSuccessOtpRequired) { transitionTo(MyAppFlow.FlowOtp) }
-      on(LoginEvent.LoginSuccessOtpNotRequired) {
+      on<LoginEvent.LoginSuccessOtpRequired> { transitionTo(MyAppFlow.FlowOtp) }
+      on<LoginEvent.LoginSuccessOtpNotRequired> {
         transitionTo(MyAppFlow.FlowPinCreate)
-        cond { context -> context.isEmpty() }
+        cond { context, _ -> context.isEmpty() }
       }
-      on(MyAppEvent.Done) {
+      on<MyAppEvent.Done> {
         // TODO check if otp required or not
         transitionTo(MyAppFlow.FlowPinCreate)
       }
@@ -39,14 +39,14 @@ fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.loginFlowState() {
 
       state(LoginFlowState.ScreenOnboarding) {
         transitions {
-          on(LoginEvent.OnboardingFinished) { transitionTo(LoginFlowState.ScreenLogin) }
-          on(MyAppEvent.Back) { transitionTo(LoginFlowState.Dismissed) }
+          on<LoginEvent.OnboardingFinished> { transitionTo(LoginFlowState.ScreenLogin) }
+          on<MyAppEvent.Back> { transitionTo(LoginFlowState.Dismissed) }
         }
       }
       state(LoginFlowState.ScreenLogin) {
         transitions {
-          on(MyAppEvent.Back) { transitionTo(LoginFlowState.ScreenOnboarding) }
-          on(LoginEvent.LoginSuccessOtpRequired) { transitionTo(LoginFlowState.FinishedOtpRequired) }
+          on<MyAppEvent.Back> { transitionTo(LoginFlowState.ScreenOnboarding) }
+          on<LoginEvent.LoginSuccessOtpRequired> { transitionTo(LoginFlowState.FinishedOtpRequired) }
         }
       }
     }

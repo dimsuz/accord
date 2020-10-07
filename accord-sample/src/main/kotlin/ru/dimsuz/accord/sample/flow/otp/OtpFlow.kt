@@ -21,7 +21,7 @@ sealed class OtpEvent : Event() {
 fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
   machine<OtpFlowState, Unit>(MyAppFlow.FlowOtp) {
     transitions {
-      on(MyAppEvent.Done) {
+      on<MyAppEvent.Done> {
         // TODO check if success or no
         transitionTo(MyAppFlow.FlowPinCreate)
       }
@@ -37,17 +37,17 @@ fun StatesDsl<MyAppFlow, Event, Map<String, Int>>.otpFlowState() {
           onExit { _, e, _ -> println("exited $e")}
         }
         transitions {
-          on(MyAppEvent.Back) {
+          on<MyAppEvent.Back> {
             transitionTo(OtpFlowState.Dismissed)
             action { _, e, _ -> println("transitioning to $e") }
           }
-          on(OtpEvent.OtpIntroContinue) { transitionTo(OtpFlowState.ScreenOtpInput) }
+          on<OtpEvent.OtpIntroContinue> { transitionTo(OtpFlowState.ScreenOtpInput) }
         }
       }
       state(OtpFlowState.ScreenOtpInput) {
         transitions {
-          on(MyAppEvent.Back) { transitionTo(OtpFlowState.ScreenOtpIntro) }
-          on(OtpEvent.OtpInputSuccess) { transitionTo(OtpFlowState.FinishedSuccessfully) }
+          on<MyAppEvent.Back> { transitionTo(OtpFlowState.ScreenOtpIntro) }
+          on<OtpEvent.OtpInputSuccess> { transitionTo(OtpFlowState.FinishedSuccessfully) }
         }
       }
     }

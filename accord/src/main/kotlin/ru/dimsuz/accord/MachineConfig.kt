@@ -1,5 +1,7 @@
 package ru.dimsuz.accord
 
+import kotlin.reflect.KClass
+
 data class MachineConfig<S, E : Event, C>(
   val rootState: StateConfig.Compound<Any, E, C, S>
 ) {
@@ -15,6 +17,7 @@ sealed class StateConfig<S> {
     override val state: S,
     val transitions: TransitionsConfig<S, E, C>
   ): StateConfig<S>()
+
   data class Compound<S, E : Event, C, SS>(
     override val state: S,
     val id: String,
@@ -26,7 +29,7 @@ sealed class StateConfig<S> {
 }
 
 data class TransitionsConfig<S, E : Event, C>(
-  val eventTargets: Map<Event, TargetConfig<S, E, C>>
+  val eventTargets: Map<KClass<E>, List<TargetConfig<S, E, C>>>
 ) {
   data class TargetConfig<S, E : Event, C>(
     val state: S,

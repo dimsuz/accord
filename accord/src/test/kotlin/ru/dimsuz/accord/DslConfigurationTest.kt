@@ -189,7 +189,58 @@ class DslConfigurationTest {
         .contains("mixing atomic ['$atomicStateName'] and compound ['$compoundStateName'] states is not allowed")
     }
   }
+  // endregion
 
+  // region Transitions
+  @Test
+  fun `given atomic state transitions should save them`() {
+    val config = machine<Test3States, TestEvent, Unit> {
+      states {
+        initial = Test3States.S31
+        state(Test3States.S31) {
+          transitions {
+            on<TestEvent.E2> {
+              transitionTo(Test3States.S32)
+            }
+          }
+        }
+      }
+    }
+
+    val stateConfig = config.rootState.states.firstOrNull() as StateConfig.Atomic<*, *, *>?
+    assertThat(stateConfig?.transitions?.eventTargets)
+      .containsKey(TestEvent.E2::class)
+  }
+
+  @Suppress("SimplifyBooleanWithConstants")
+  @Test
+  fun `given atomic state multiple transitions on single event should save them`() {
+    val config = machine<Test3States, TestEvent, Boolean> {
+      states {
+        initial = Test3States.S31
+        state(Test3States.S31) {
+          transitions {
+            on<TestEvent.E1> {
+              transitionTo(Test3States.S32)
+              cond { context, _ -> context == true }
+            }
+            on<TestEvent.E1> {
+              transitionTo(Test3States.S33)
+              cond { context, _ -> context == false }
+            }
+          }
+        }
+        state(Test3States.S33) {}
+        state(Test3States.S32) {}
+      }
+    }
+
+    val stateConfig = config.rootState.states.firstOrNull() as StateConfig.Atomic<*, *, *>?
+    assertThat(stateConfig?.transitions?.eventTargets)
+      .containsKey(TestEvent.E1::class)
+    assertThat(stateConfig?.transitions?.eventTargets?.get(TestEvent.E1::class))
+      .hasSize(2)
+  }
   // endregion
 
   private fun <E : Event, C> MachineDsl<Test1States, E, C>.addFakeStates() {
@@ -215,6 +266,11 @@ class DslConfigurationTest {
 
   private enum class Test1States {
     S11
+  }
+
+  private sealed class TestEvent : Event() {
+    data class E1(val value: Int) : TestEvent()
+    data class E2(val value: String) : TestEvent()
   }
 }
 

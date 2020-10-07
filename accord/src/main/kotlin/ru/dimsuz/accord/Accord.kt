@@ -1,6 +1,7 @@
 package ru.dimsuz.accord
 
 import java.util.UUID
+import kotlin.reflect.KClass
 
 // TODO
 // - test not all states described (have state() block)
@@ -39,25 +40,31 @@ class StatesDsl<S, E : Event, C> {
     state: S,
     init: CompoundStateDsl<S, E, C, SubState, SubContext>.() -> Unit
   ) {
-    compoundStates[state] = CompoundStateDsl<S, E, C, SubState, SubContext>().apply {
-      init()
-    }
+    compoundStates[state] = CompoundStateDsl<S, E, C, SubState, SubContext>().apply(init)
   }
 }
 
 @StateMachineDsl
 class TransitionsDsl<S, E : Event, C> {
-  fun on(event: E, init: TransitionDsl<S, E, C>.() -> Unit): StateDsl<S, E, C> = TODO()
+  @PublishedApi
+  internal val transitions = mutableMapOf<KClass<out E>, TransitionDsl<S, out E, C>>()
+
+  inline fun <reified EV : E> on(init: TransitionDsl<S, EV, C>.() -> Unit) {
+    transitions[EV::class] = TransitionDsl<S, EV, C>().apply(init)
+  }
 }
 
 @StateMachineDsl
 class StateDsl<S, E : Event, C> {
-  fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit): Unit = TODO()
+  inline fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit) {
+    val transitionsDsl = TransitionsDsl<S, E, C>()
+    init(transitionsDsl)
+  }
   fun actions(init: StateActionsDsl<C, E, S>.() -> Unit): Unit = TODO()
 }
 
 @StateMachineDsl
-class CompoundStateDsl<S, E : Event, C, SS, CS>(
+class CompoundStateDsl<S, E : Event, C, SS, CS> internal constructor(
   val states: StatesDsl<SS, E, CS> = StatesDsl()
 ) {
   fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit): Unit = TODO()
@@ -71,10 +78,10 @@ class CompoundStateDsl<S, E : Event, C, SS, CS>(
 }
 
 @StateMachineDsl
-class TransitionDsl<S, E : Event, C> {
-  fun transitionTo(state: S): Unit = TODO()
-  fun cond(predicate: (context: C) -> Boolean): Unit = TODO()
-  fun action(action: MachineAction<C, E, S>): Unit = TODO()
+class TransitionDsl<S, E : Event, C> @PublishedApi internal constructor() {
+  fun transitionTo(state: S) = Unit
+  fun cond(predicate: (context: C, event: E) -> Boolean) = Unit
+  fun action(action: MachineAction<C, E, S>) = Unit
 }
 
 @StateMachineDsl
