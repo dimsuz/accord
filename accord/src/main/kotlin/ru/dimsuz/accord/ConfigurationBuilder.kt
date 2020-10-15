@@ -1,5 +1,7 @@
 package ru.dimsuz.accord
 
+import ru.dimsuz.accord.either.mapValuesE
+import ru.dimsuz.accord.either.sequenceA
 import java.util.UUID
 
 fun <S, E : Event, C> machine(init: MachineDsl<S, E, C>.() -> Unit): MachineConfig<S, E, C> {
@@ -17,7 +19,7 @@ fun <S, E : Event, C> machine(init: MachineDsl<S, E, C>.() -> Unit): MachineConf
   )
 }
 
-fun <S, E : Event, C> createSubStateConfigs(
+private fun <S, E : Event, C> createSubStateConfigs(
   states: StatesDsl<S, E, C>
 ): List<StateConfig<S>> {
   if (states.atomicStates.isNotEmpty() && states.compoundStates.isNotEmpty()) {
@@ -32,11 +34,14 @@ fun <S, E : Event, C> createSubStateConfigs(
   }
 }
 
-fun <S, E : Event, C> createAtomicStateConfig(state: S, stateDsl: StateDsl<S, E, C>): StateConfig<S> {
+private fun <S, E : Event, C> createAtomicStateConfig(state: S, stateDsl: StateDsl<S, E, C>): StateConfig<S> {
+  val eventTargets = stateDsl.transitionsDsl?.transitions?.mapValuesE { transitionDslList ->
+    transitionDslList.map { it.toTargetConfig() }.sequenceA()
+  }
   return StateConfig.Atomic(state, TransitionsConfig<S, E, C>(emptyMap()))
 }
 
-fun <S, E : Event, C, SS, CS> createCompoundStateConfig(state: S, stateDsl: CompoundStateDsl<S, E, C, SS, CS>): StateConfig<S> {
+private fun <S, E : Event, C, SS, CS> createCompoundStateConfig(state: S, stateDsl: CompoundStateDsl<S, E, C, SS, CS>): StateConfig<S> {
   val id = getOrCreateId(stateDsl)
   val subStates = createSubStateConfigs(stateDsl.states)
   val initialState = stateDsl.states.initial ?: error("initial state is not specified for '$id'")
@@ -49,7 +54,6 @@ fun <S, E : Event, C, SS, CS> createCompoundStateConfig(state: S, stateDsl: Comp
     transitions = TransitionsConfig(emptyMap())
   )
 }
-
 
 private fun getOrCreateId(machine: CompoundStateDsl<*, *, *, *, *>): String {
   if (machine.id?.isBlank() == true) {

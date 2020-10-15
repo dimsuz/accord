@@ -192,6 +192,47 @@ class DslConfigurationTest {
   // endregion
 
   // region Transitions
+
+  @Test
+  fun `given atomic state with no transitions is accepted as valid config`() {
+    var error: Throwable? = null
+    try {
+      machine<Test3States, TestEvent, Unit> {
+        states {
+          initial = Test3States.S31
+          state(Test3States.S31) {
+          }
+        }
+      }
+    } catch (e: Throwable) {
+      error = e
+    }
+
+    assertThat(error).isNull()
+  }
+
+  @Test
+  fun `given compound state with no transitions is accepted as valid config`() {
+    var error: Throwable? = null
+    try {
+      machine<Test3States, TestEvent, Unit> {
+        states {
+          initial = Test3States.S31
+          machine<Test1States, Unit>(Test3States.S31) {
+            states {
+              initial = Test1States.S11
+              state(Test1States.S11) {}
+            }
+          }
+        }
+      }
+    } catch (e: Throwable) {
+      error = e
+    }
+
+    assertThat(error).isNull()
+  }
+
   @Test
   fun `given atomic state transitions should save them`() {
     val config = machine<Test3States, TestEvent, Unit> {

@@ -16,7 +16,7 @@ sealed class StateConfig<S> {
   data class Atomic<S, E : Event, C>(
     override val state: S,
     val transitions: TransitionsConfig<S, E, C>
-  ): StateConfig<S>()
+  ) : StateConfig<S>()
 
   data class Compound<S, E : Event, C, SS>(
     override val state: S,
@@ -25,7 +25,7 @@ sealed class StateConfig<S> {
     val initialState: StateConfig<SS>,
     val states: List<StateConfig<SS>>,
     val transitions: TransitionsConfig<SS, E, C>
-  ): StateConfig<S>()
+  ) : StateConfig<S>()
 }
 
 data class TransitionsConfig<S, E : Event, C>(
@@ -33,6 +33,6 @@ data class TransitionsConfig<S, E : Event, C>(
 ) {
   data class TargetConfig<S, E : Event, C>(
     val state: S,
-    val cond: (context: C, event: E) -> Boolean
+    val cond: ((context: C, event: E) -> Boolean)?
   )
 }

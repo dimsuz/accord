@@ -27,16 +27,18 @@ class StatesDsl<S, E : Event, C> {
   var initial: S? = null
   var final: Set<S> = emptySet()
 
+  @PublishedApi
   internal val atomicStates = mutableMapOf<S, StateDsl<S, E, C>>()
+  @PublishedApi
   internal val compoundStates = mutableMapOf<S, CompoundStateDsl<S, E, C, *, *>>()
 
-  fun state(state: S, init: StateDsl<S, E, C>.() -> Unit) {
-    atomicStates[state] = StateDsl<S, E, C>().apply { init() }
+  inline fun state(state: S, init: StateDsl<S, E, C>.() -> Unit) {
+    atomicStates[state] = StateDsl<S, E, C>().apply(init)
   }
 
   // TODO call `compoundState`? Otherwise it's easy to just call top-level `machine` from `states { }` block
   //  and get confused
-  fun <SubState : Any, SubContext> machine(
+  inline fun <SubState : Any, SubContext> machine(
     state: S,
     init: CompoundStateDsl<S, E, C, SubState, SubContext>.() -> Unit
   ) {
@@ -47,24 +49,28 @@ class StatesDsl<S, E : Event, C> {
 @StateMachineDsl
 class TransitionsDsl<S, E : Event, C> {
   @PublishedApi
-  internal val transitions = mutableMapOf<KClass<out E>, TransitionDsl<S, out E, C>>()
+  internal val transitions = mutableMapOf<KClass<out E>, MutableList<TransitionDsl<S, out E, C>>>()
 
   inline fun <reified EV : E> on(init: TransitionDsl<S, EV, C>.() -> Unit) {
-    transitions[EV::class] = TransitionDsl<S, EV, C>().apply(init)
+    val list = transitions[EV::class] ?: mutableListOf()
+    list.add(TransitionDsl<S, EV, C>().apply(init))
+    transitions[EV::class] = list
   }
 }
 
 @StateMachineDsl
 class StateDsl<S, E : Event, C> {
+  @PublishedApi
+  internal var transitionsDsl: TransitionsDsl<S, E, C>? = null
+
   inline fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit) {
-    val transitionsDsl = TransitionsDsl<S, E, C>()
-    init(transitionsDsl)
+    transitionsDsl = TransitionsDsl<S, E, C>().apply(init)
   }
   fun actions(init: StateActionsDsl<C, E, S>.() -> Unit): Unit = TODO()
 }
 
 @StateMachineDsl
-class CompoundStateDsl<S, E : Event, C, SS, CS> internal constructor(
+class CompoundStateDsl<S, E : Event, C, SS, CS> @PublishedApi internal constructor(
   val states: StatesDsl<SS, E, CS> = StatesDsl()
 ) {
   fun transitions(init: TransitionsDsl<S, E, C>.() -> Unit): Unit = TODO()
@@ -79,7 +85,10 @@ class CompoundStateDsl<S, E : Event, C, SS, CS> internal constructor(
 
 @StateMachineDsl
 class TransitionDsl<S, E : Event, C> @PublishedApi internal constructor() {
-  fun transitionTo(state: S) = Unit
+  internal var state: S? = null
+  fun transitionTo(state: S) {
+    this.state = state
+  }
   fun cond(predicate: (context: C, event: E) -> Boolean) = Unit
   fun action(action: MachineAction<C, E, S>) = Unit
 }
